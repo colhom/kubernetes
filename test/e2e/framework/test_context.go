@@ -73,10 +73,7 @@ type CloudConfig struct {
 }
 
 var TestContext TestContextType
-
-func SetTestContext(t TestContextType) {
-	TestContext = t
-}
+var federatedKubeContext string
 
 func RegisterFlags() {
 	// Turn on verbose by default to get spec names
@@ -89,7 +86,10 @@ func RegisterFlags() {
 	config.GinkgoConfig.RandomizeAllSpecs = true
 
 	flag.StringVar(&TestContext.KubeConfig, clientcmd.RecommendedConfigPathFlag, os.Getenv(clientcmd.RecommendedConfigPathEnvVar), "Path to kubeconfig containing embedded authinfo.")
-	flag.StringVar(&TestContext.KubeContext, clientcmd.FlagContext, "", "kubeconfig context to use/override. If unset, will use value from 'current-context'")
+
+	//TODO(colhom): instead of using provider, derive the context name from provider using manual mapping
+	flag.StringVar(&TestContext.KubeContext, clientcmd.FlagContext, os.Getenv("KUBERNETES_PROVIDER"), "kubeconfig context to use/override. If unset, will use value from 'current-context'")
+	flag.StringVar(&federatedKubeContext, "federated-kube-context", "federated-cluster", "kubeconfig context for federated-cluster.")
 	flag.StringVar(&TestContext.KubeVolumeDir, "volume-dir", "/var/lib/kubelet", "Path to the directory containing the kubelet volumes.")
 	flag.StringVar(&TestContext.CertDir, "cert-dir", "", "Path to the directory containing the certs. Default is empty, which doesn't use certs.")
 	flag.StringVar(&TestContext.Host, "host", "", "The host, or apiserver, to connect to")

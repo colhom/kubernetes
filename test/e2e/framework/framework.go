@@ -24,6 +24,7 @@ import (
 	"sync"
 	"time"
 
+	unversionedfederation "k8s.io/kubernetes/federation/client/clientset_generated/federation_internalclientset/typed/federation/unversioned"
 	"k8s.io/kubernetes/pkg/api"
 	apierrs "k8s.io/kubernetes/pkg/api/errors"
 	"k8s.io/kubernetes/pkg/client/clientset_generated/release_1_2"
@@ -54,6 +55,8 @@ type Framework struct {
 	Clientset_1_2 *release_1_2.Clientset
 	Clientset_1_3 *release_1_3.Clientset
 
+	FederatedClient *unversionedfederation.FederationClient
+
 	Namespace                *api.Namespace   // Every test has at least one namespace
 	namespacesToDelete       []*api.Namespace // Some tests have more than one.
 	NamespaceDeletionTimeout time.Duration
@@ -75,6 +78,9 @@ type Framework struct {
 
 	// configuration for framework's client
 	options FrameworkOptions
+
+	// will this framework exercise a federated cluster as well
+	federated bool
 }
 
 type TestDataSummary interface {
@@ -95,6 +101,12 @@ func NewDefaultFramework(baseName string) *Framework {
 		ClientBurst: 50,
 	}
 	return NewFramework(baseName, options, nil)
+}
+
+func NewDefaultFederatedFramework(baseName string) *Framework {
+	f := NewDefaultFramework(baseName)
+	f.federated = true
+	return f
 }
 
 func NewFramework(baseName string, options FrameworkOptions, client *client.Client) *Framework {
@@ -127,8 +139,16 @@ func (f *Framework) BeforeEach() {
 		Expect(err).NotTo(HaveOccurred())
 		f.Client = c
 	}
+
 	f.Clientset_1_2 = adapter_1_2.FromUnversionedClient(f.Client)
 	f.Clientset_1_3 = adapter_1_3.FromUnversionedClient(f.Client)
+
+	if f.federated && f.FederatedClient == nil {
+		By("Creating a federated kubernetes client")
+		var err error
+		f.FederatedClient, err = LoadFederatedClient()
+		Expect(err).NotTo(HaveOccurred())
+	}
 
 	By("Building a namespace api object")
 	namespace, err := f.CreateNamespace(f.BaseName, map[string]string{
@@ -199,6 +219,18 @@ func (f *Framework) AfterEach() {
 		f.Namespace = nil
 		f.Client = nil
 	}()
+
+	if f.federated {
+		defer func() {
+			if f.FederatedClient == nil {
+				Logf("Warning: framework is marked federated, but has no FederatedClient")
+				return
+			}
+			if err := f.FederatedClient.Clusters().DeleteCollection(nil, api.ListOptions{}); err != nil {
+				Logf("Error: failed to delete Clusters: %+v", err)
+			}
+		}()
+	}
 
 	// Print events if the test failed.
 	if CurrentGinkgoTestDescription().Failed {
