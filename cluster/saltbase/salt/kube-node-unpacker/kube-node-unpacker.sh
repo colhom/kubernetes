@@ -29,10 +29,19 @@ while true; do
     elif [[ "${rc}" == 124 ]]; then
       restart_docker=true
     fi
+
+    timeout 30 docker load -i /srv/salt/kube-bins/federated-apiserver.tar 1>/dev/null 2>&1
+    rc=$?
+    if [[ "${rc}" == 0 ]]; then
+      let loadedImageFlags="${loadedImageFlags}|2"
+    elif [[ "${rc}" == 124 ]]; then
+      restart_docker=true
+    fi
+
   fi
 
   # required docker images got installed. exit while loop.
-  if [[ "${loadedImageFlags}" == 1 ]]; then break; fi
+  if [[ "${loadedImageFlags}" == 3 ]]; then break; fi
 
   # Sometimes docker load hang, restart docker daemon resolve the issue
   if [[ "${restart_docker}" ]]; then service docker restart; fi

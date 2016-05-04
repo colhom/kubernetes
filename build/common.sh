@@ -104,6 +104,7 @@ kube::build::get_docker_wrapped_binaries() {
           kube-controller-manager,busybox
           kube-scheduler,busybox
           kube-proxy,gcr.io/google_containers/debian-iptables-amd64:v3
+	  federated-apiserver,debian:8 #todo(colhom): figure out why federated-apiserver binary doesn't work with busybox
         );;
     "arm")
         local targets=(
@@ -111,6 +112,7 @@ kube::build::get_docker_wrapped_binaries() {
           kube-controller-manager,armel/busybox
           kube-scheduler,armel/busybox
           kube-proxy,gcr.io/google_containers/debian-iptables-arm:v3
+	  federated-apiserver,armel/busybox
         );;
     "arm64")
         local targets=(
@@ -118,6 +120,7 @@ kube::build::get_docker_wrapped_binaries() {
           kube-controller-manager,aarch64/busybox
           kube-scheduler,aarch64/busybox
           kube-proxy,gcr.io/google_containers/debian-iptables-arm64:v3
+	  federated-apiserver,aarch64/busybox
         );;
     "ppc64le")
         local targets=(
@@ -125,6 +128,7 @@ kube::build::get_docker_wrapped_binaries() {
           kube-controller-manager,ppc64le/busybox
           kube-scheduler,ppc64le/busybox
           kube-proxy,gcr.io/google_containers/debian-iptables-ppc64le:v3
+	  federated-apiserver,ppc64le/busybox
         );;
   esac
 

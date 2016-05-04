@@ -45,15 +45,24 @@ while true; do
     elif [[ $rc == 124 ]]; then
       restart_docker=true
     fi
+
+    timeout 30 docker load -i /srv/salt/kube-bins/federated-apiserver.tar 1>/dev/null 2>&1
+    rc=$?
+    if [[ $rc == 0 ]]; then
+      let loadedImageFlags="$loadedImageFlags|8"
+    elif [[ $rc == 124 ]]; then
+      restart_docker=true
+    fi
+
   fi
 
   # required docker images got installed. exit while loop.
-  if [[ $loadedImageFlags == 7 ]]; then break; fi
+  if [[ $loadedImageFlags == 15 ]]; then break; fi
 
   # Sometimes docker load hang, restart docker daemon resolve the issue
   if [[ $restart_docker ]]; then
     if ! service docker restart; then # Try systemctl if there's no service command.
-      systemctl restart docker      
+      systemctl restart docker
     fi
   fi
 

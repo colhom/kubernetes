@@ -74,4 +74,6 @@ fi
 install-salt
 
 run-salt
+dnf install -y socat ethtool
+dnf update -y docker
 

@@ -99,8 +99,9 @@ function create-kubeconfig() {
     "${kubectl}" config set-credentials "${CONTEXT}" "${user_args[@]}"
   fi
   "${kubectl}" config set-context "${CONTEXT}" --cluster="${CONTEXT}" --user="${CONTEXT}"
-  "${kubectl}" config use-context "${CONTEXT}"  --cluster="${CONTEXT}"
-
+  if [[ "${SECONDARY_KUBECONFIG}" != "true" ]];then
+      "${kubectl}" config use-context "${CONTEXT}"  --cluster="${CONTEXT}"
+  fi
   # If we have a bearer token, also create a credential entry with basic auth
   # so that it is easy to discover the basic auth password for your cluster
   # to use in a web browser.
@@ -381,6 +382,7 @@ function stage-images() {
     "kube-controller-manager"
     "kube-scheduler"
     "kube-proxy"
+    "federated-apiserver"
   )
 
   local docker_cmd=("docker")

@@ -29,6 +29,9 @@ function detect-master () {
 function detect-nodes {
   echo "Nodes already detected" 1>&2
   KUBE_NODE_IP_ADDRESSES=("${NODE_IPS[@]}")
+  export KUBE_NODE_IP_ADDRESSES
+
+  echo "KUBE_NODE_IP_ADDRESSES=${KUBE_NODE_IP_ADDRESSES}"
 }
 
 # Verify prereqs on host machine  Also sets exports USING_KUBE_SCRIPTS=true so

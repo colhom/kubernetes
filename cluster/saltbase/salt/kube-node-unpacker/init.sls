@@ -19,6 +19,14 @@ kube-proxy-tar:
     - user: root
     - group: root
     - mode: 644
+federated-apiserver-tar:
+  file.managed:
+    - name: /srv/salt/kube-bins/federated-apiserver.tar
+    - source: salt://kube-bins/federated-apiserver.tar
+    - makedirs: True
+    - user: root
+    - group: root
+    - mode: 644
 {% endif %}
 
 {% set is_helium = '0' %}
@@ -43,6 +51,7 @@ kube-proxy-tar:
       - file: node-docker-image-tags
 {% else %}
       - file: kube-proxy-tar
+      - file: federated-apiserver-tar
 {% endif %}
       - file: /etc/kubernetes/kube-node-unpacker.sh
       - file: {{ pillar.get('systemd_system_path') }}/kube-node-unpacker.service
