@@ -115,7 +115,7 @@ function set-federated-zone-vars {
 	# prefix gets appended to itslef, with some extra information
 	# need tot keep it short
 	export KUBE_GCE_INSTANCE_PREFIX="${USER}-${zone}"
-
+	export INSTANCE_PREFIX="$KUBE_GCE_INSTANCE_PREFIX"
     elif [[ "$KUBERNETES_PROVIDER" == "gke"  ]];then
 
 	export CLUSTER_NAME="${USER}-${zone}"
@@ -124,6 +124,7 @@ function set-federated-zone-vars {
 
 	export KUBE_AWS_ZONE="$zone"
 	export KUBE_AWS_INSTANCE_PREFIX="${USER}-${zone}"
+	export INSTANCE_PREFIX="$KUBE_AWS_INSTANCE_PREFIX"
     else
 	echo "Provider \"${KUBERNETES_PROVIDER}\" is not supported"
 	exit 1
