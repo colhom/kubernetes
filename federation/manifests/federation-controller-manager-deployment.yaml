@@ -23,9 +23,18 @@ spec:
         - name: ssl-certs
           readOnly: true
           mountPath: /etc/ssl/certs
+        {{if .HYPERKUBE_IMAGE_REPO}}
+        image: {{.HYPERKUBE_IMAGE_REPO}}:{{.HYPERKUBE_IMAGE_TAG}}
+        {{else}}
         image: {{.FEDERATION_CONTROLLER_MANAGER_IMAGE_REPO}}:{{.FEDERATION_CONTROLLER_MANAGER_IMAGE_TAG}}
+        {{end}}
         command:
+        {{if .HYPERKUBE_IMAGE_REPO}}
+        - /hyperkube
+        - federation-controller-manager
+        {{else}}
         - /usr/local/bin/federation-controller-manager
+        {{end}}
         - --master=https://{{.FEDERATION_APISERVER_DEPLOYMENT_NAME}}:443
         - --dns-provider={{.FEDERATION_DNS_PROVIDER}}
         - --dns-provider-config={{.FEDERATION_DNS_PROVIDER_CONFIG}}

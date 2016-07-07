@@ -57,21 +57,32 @@ source "${KUBE_ROOT}/hack/lib/util.sh"
 
 host_kubectl="${KUBE_ROOT}/cluster/kubectl.sh --namespace=${FEDERATION_NAMESPACE}"
 
-# required:
-# FEDERATION_PUSH_REPO_BASE: repo to which federated container images will be pushed
-
+# Required:
+# EITHER
+#  (ci mode)
+#   FEDERATION_PUSH_REPO_BASE: repo to which federated container images will be pushed
+# OR
+#  (release mode)
+#   HYPERKUBE_IMAGE_REPO: repo for hyperkube image
+#   HYPERKUBE_IMAGE_TAG: tag for hyperkube image
+#
 # Optional
 # FEDERATION_IMAGE_TAG: reference and pull all federated images with this tag. Used for ci testing
 function create-federation-api-objects {
 (
-    : "${FEDERATION_PUSH_REPO_BASE?Must set FEDERATION_PUSH_REPO_BASE env var}"
-    export FEDERATION_APISERVER_DEPLOYMENT_NAME="federation-apiserver"
-    export FEDERATION_APISERVER_IMAGE_REPO="${FEDERATION_PUSH_REPO_BASE}/federation-apiserver"
-    export FEDERATION_APISERVER_IMAGE_TAG="${FEDERATION_IMAGE_TAG:-$(cat ${KUBE_ROOT}/_output/${KUBE_BUILD_STAGE}/server/${KUBE_PLATFORM}-${KUBE_ARCH}/kubernetes/server/bin/federation-apiserver.docker_tag)}"
 
+    if [[ "${HYPERKUBE_IMAGE_REPO:-}" == "" ]];then
+	: "${FEDERATION_PUSH_REPO_BASE?Must set FEDERATION_PUSH_REPO_BASE env var}"
+	export FEDERATION_APISERVER_IMAGE_REPO="${FEDERATION_PUSH_REPO_BASE}/federation-apiserver"
+	export FEDERATION_APISERVER_IMAGE_TAG="${FEDERATION_IMAGE_TAG:-$(cat ${KUBE_ROOT}/_output/${KUBE_BUILD_STAGE}/server/${KUBE_PLATFORM}-${KUBE_ARCH}/kubernetes/server/bin/federation-apiserver.docker_tag)}"
+
+	export FEDERATION_CONTROLLER_MANAGER_IMAGE_REPO="${FEDERATION_PUSH_REPO_BASE}/federation-controller-manager"
+	export FEDERATION_CONTROLLER_MANAGER_IMAGE_TAG="${FEDERATION_IMAGE_TAG:-$(cat ${KUBE_ROOT}/_output/${KUBE_BUILD_STAGE}/server/${KUBE_PLATFORM}-${KUBE_ARCH}/kubernetes/server/bin/federation-controller-manager.docker_tag)}"
+    else
+	: "${HYPERKUBE_IMAGE_TAG?Must set HYPERKUBE_IMAGE_TAG env var}"
+    fi
     export FEDERATION_CONTROLLER_MANAGER_DEPLOYMENT_NAME="federation-controller-manager"
-    export FEDERATION_CONTROLLER_MANAGER_IMAGE_REPO="${FEDERATION_PUSH_REPO_BASE}/federation-controller-manager"
-    export FEDERATION_CONTROLLER_MANAGER_IMAGE_TAG="${FEDERATION_IMAGE_TAG:-$(cat ${KUBE_ROOT}/_output/${KUBE_BUILD_STAGE}/server/${KUBE_PLATFORM}-${KUBE_ARCH}/kubernetes/server/bin/federation-controller-manager.docker_tag)}"
+    export FEDERATION_APISERVER_DEPLOYMENT_NAME="federation-apiserver"
 
     if [[ -z "${FEDERATION_DNS_PROVIDER:-}" ]]; then
       # Set the appropriate value based on cloud provider.
